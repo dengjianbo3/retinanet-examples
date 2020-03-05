@@ -167,6 +167,16 @@ def worker(rank, args, world, model, state):
                 out.write(exported)
         else:
             exported.save(args.export)
+            
+def tran2cpp(model):
+    # An example input you would normally provide to your model's forward() method.
+    example = torch.rand(1, 3, 224, 224)
+
+    # Use torch.jit.trace to generate a torch.jit.ScriptModule via tracing.
+    traced_script_module = torch.jit.trace(model, example)
+
+    # save
+    traced_script_module.save("~/Download/cpp_model.pt")
 
 def main(args=None):
     'Entry point for the retinanet command'
@@ -179,6 +189,7 @@ def main(args=None):
     world = torch.cuda.device_count()
     if args.command == 'export' or world <= 1:
         worker(0, args, 1, model, state)
+        tran2cpp(model)
     else:
         torch.multiprocessing.spawn(worker, args=(args, world, model, state), nprocs=world)
 
